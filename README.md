@@ -5,7 +5,7 @@ Rules of Blackjack based on https://youtu.be/XYgdLMcPspo
 
 Basic Strategy For Blackjack https://www.ebay.co.uk/itm/303101632202
 
-####Cards
+#### Cards
 
 Cards are represented as tuples, `(name, value_list)`
 
@@ -17,7 +17,7 @@ For example,
 ("Q♦", [10])
 ("A♠", [1, 11])
 ~~~
-####Shoe
+#### Shoe
 
 The [Shoe](https://en.wikipedia.org/wiki/Shoe_(cards) is configured to contain 4 packs of cards. It is configured to have remaining cards discarded, and the shoe re-filled with a fresh set of 4 packs of cards when the penetration level of 75% is reached. Both of these settings can be altered by changing these attributes of the `Shoe` class,
 
@@ -28,14 +28,14 @@ self.penetration = 75 / 100    # Percentage of cards to be dealt before refillin
 
 At the end of each game, the `replnesh` method should be called, to check whether the shoe has been depleted below the penetration level. If it has, then the shoe will be re-filled and all cards in the shoe shuffled.
 
-####Blackjack Value
+#### Blackjack Value
 
 A Blackjack can only be won with first two cards of first hand of a game. The attribute `blackjack_value` of the `Table` class is set to "3 for 2", which is standard the standard value of a Blackjack value in Vegas casinos (stake also returned). 
 ~~~
 self.blackjack_value = 3 / 2        # Eg. £10 bet wins £15.
 ~~~
 
-##Strategies
+## Strategies
 #### Dealer Strategy
 The most basic strategy. This is the strategy that dealers must follow in Vegas casinos. It is also possible to run experiments where the player uses this strategy too.
 
