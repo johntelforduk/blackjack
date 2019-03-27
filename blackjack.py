@@ -79,9 +79,9 @@ class Shoe:
 
     # Force some test cards on to the front of the shoe.
     def test_cards(self):
-        self.cards =     [("2♥", [2])]
-        self.cards.append(("4♥", [4]))
+        self.cards =     [("A♥", [1, 11])]
         self.cards.append(("2♥", [2]))
+        self.cards.append(("7♥", [7]))
         self.cards.append(("9♥", [9]))
 
         # Because more cards may be added to the shoe, add some normal cards to the end of the shoe.
@@ -160,9 +160,9 @@ class Hand:
         self.calculate_value()          # Recalculate the value of this hand.
 
 
-# Parm is the dealer's up card. Function returns a string which is the value of the up card for purpose of looking
+# Parm is a card. Function returns a string which is the value of the card for purpose of looking
 # it up on the "Basic Strategy For Blackjack" strategy card.
-def up_card(card):
+def card_value(card):
     (card, value_list) = card
     if value_list in [[2], [3], [4], [5], [6], [7], [8], [9]]:
         return card[0]                     # First char of card string, eg "3♥" returns "3"
@@ -218,7 +218,7 @@ class Table:
 
     # This strategy looks at the dealer's up card to make a more nuanced decision about whether to Hit or Stand.
     def basic_strategy_section_1(self, hand, dealer_up_card):
-        dealer_card = up_card(dealer_up_card)
+        dealer_card = card_value(dealer_up_card)
         finished = False
 
         while not finished:
@@ -231,7 +231,7 @@ class Table:
 
 
     def basic_strategy_section_2(self, hand, dealer_up_card):
-        dealer_card = up_card(dealer_up_card)
+        dealer_card = card_value(dealer_up_card)
 
         # It is only possible to Double Down with first 2 cards of the hand on table.
         double_down = False
@@ -251,6 +251,68 @@ class Table:
         # If we are not doubling down, then play Basic Strategy Section 1.
         else:
             self.basic_strategy_section_1(hand, dealer_up_card)
+
+    def basic_strategy_section_3(self, hand, dealer_up_card):
+
+        other_card = ""
+        decision = ""
+
+        # Work out the values of both of the player's cards.
+        player_card_1 = card_value(hand.cards[0])
+        player_card_2 = card_value(hand.cards[1])
+
+        if player_card_1 == "A":
+            other_card = player_card_2
+        elif player_card_2 == "A":
+            other_card = player_card_1
+
+        # Are either of the player's cards an ace?
+        if other_card != "":
+            dealer_card = card_value(dealer_up_card)
+
+            if other_card in ["8", "9", "10"]:
+                decision = "Stand"
+            elif other_card == "7":
+                if dealer_card in ["2", "7", "8"]:
+                    decision = "Stand"
+                elif dealer_card in ["9", "10", "A"]:
+                    decision = "Hit"
+                else:
+                    decision = "Double Down"
+            elif other_card == "6":
+                if dealer_card in ["3", "4", "5", "6"]:
+                    decision = "Double Down"
+                else:
+                    decision = "Hit"
+            elif other_card in ["4", "5"]:
+                if dealer_card in ["4", "5", "6"]:
+                    decision = "Double Down"
+                else:
+                    decision = "Hit"
+            elif other_card in ["2", "3"]:
+                if dealer_card in ["5", "6"]:
+                    decision = "Double Down"
+                else:
+                    decision = "Hit"
+
+        if other_card == "":                                        # If neither card is an ace,
+            self.basic_strategy_section_2(hand, dealer_up_card)     # ... continue with Section 2 strategy.
+
+        elif decision == "Double Down":
+            self.double_down(hand)                                  # Double stake.
+            self.deal_one_card(hand)                                # One more card only, after Double Down.
+
+        elif decision == "Hit":
+            self.deal_one_card(hand)                                # "Hit",
+            self.basic_strategy_section_2(hand, dealer_up_card)     # ... and then continue with Section 2 strategy.
+
+        elif decision != "Stand":                                   # "Stand" means do nothing, but otherwise,
+            self.basic_strategy_section_2(hand, dealer_up_card)     # ... continue with Section 2 strategy.
+
+
+
+
+
 
     def play_one_game(self, strategy):
         self.games_played += 1
@@ -326,6 +388,9 @@ class Test:
             this_table.play_one_game(this_table.basic_strategy_section_1)
         elif self.strategy == "Basic Strategy Section 2":
             this_table.play_one_game(this_table.basic_strategy_section_2)
+        elif self.strategy == "Basic Strategy Section 3":
+            this_table.play_one_game(this_table.basic_strategy_section_3)
+
 
 
 class Study:
@@ -350,6 +415,9 @@ class Study:
                     this_table.play_one_game(this_table.basic_strategy_section_1)
                 elif self.strategy == "Basic Strategy Section 2":
                     this_table.play_one_game(this_table.basic_strategy_section_2)
+                elif self.strategy == "Basic Strategy Section 3":
+                    this_table.play_one_game(this_table.basic_strategy_section_3)
+
 
             self.win_loss.append(100 * this_table.amount_won_or_lost / this_table.total_staked)
             self.grand_total_staked += this_table.total_staked
@@ -363,6 +431,8 @@ class Study:
         print("Number of sessions:", self.sessions)
         print("Games per session:", self.games_per_session)
         print("Total money staked=£%d" % self.grand_total_staked)
+        print("Max house edge: %.2f%%" % max(self.win_loss))
+        print("Min house edge: %.2f%%" % min(self.win_loss))
         print("Average house edge: %.2f%%" % mean(self.win_loss))
         print("(-ve means house is ahead, +ve means player is ahead)")
         print("Standard deviation: %.2f" % stdev(self.win_loss))
@@ -373,8 +443,11 @@ verbose = True
 t1 = Test("Dealer")
 t2 = Test("Basic Strategy Section 1")
 t3 = Test("Basic Strategy Section 2")
+t4 = Test("Basic Strategy Section 3")
+
 
 verbose = False
-d = Study("Dealer", 10, 10000)
-b1 = Study("Basic Strategy Section 1", 10, 10000)
-b2 = Study("Basic Strategy Section 2", 10, 10000)
+s1 = Study("Dealer", 10, 10000)
+s2 = Study("Basic Strategy Section 1", 10, 10000)
+s3 = Study("Basic Strategy Section 2", 10, 10000)
+s4 = Study("Basic Strategy Section 3", 10, 10000)
