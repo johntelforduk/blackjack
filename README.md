@@ -79,3 +79,23 @@ This strategy builds on the Section 1 Strategy and the Dealer Strategy, by takin
 H = "Hit", D = "Double Down".
 
 Each row is a different value of the Player's hand. Each column is a different value of the Dealer's up card.
+
+#### Basic Strategy Section 3
+
+This strategy is based on the third section of the Basic Strategy For Blackjack.
+
+This strategy builds on the Section 1 & 2 Strategies and the Dealer Strategy, by adding special rules when one of the player's cards is an ace. 
+
+|     | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | A |
+|-----|---|---|---|---|---|---|---|---|----|---|
+| **A, 8-10** | S | S | S | S | S | S | S | S | S  | S |
+| **A, 7**  | S | D | D | D | D | S | S | H | H  | H |
+| **A, 6**  | H | D | D | D | D | H | H | H | H  | H |
+| **A, 5**  | H | H | D | D | D | H | H | H | H  | H |
+| **A, 4**  | H | H | D | D | D | H | H | H | H  | H |
+| **A, 3**  | H | H | H | D | D | H | H | H | H  | H |
+| **A, 2**  | H | H | H | D | D | H | H | H | H  | H |
+
+H = "Hit", D = "Double Down", S = "Stand".
+
+Each row is a different value of the Player's hand. Each column is a different value of the Dealer's up card.
