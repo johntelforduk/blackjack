@@ -12,10 +12,10 @@ Cards are represented as tuples, `(name, value_list), card_value)`.
 For example,
 
 ~~~
-("6♥", [6])
-("10♣", [10])
-("Q♦", [10])
-("A♠", [1, 11])
+("6♥", [6], "6")
+("10♣", [10], "10")
+("Q♦", [10], "10")
+("A♠", [1, 11], "A")
 ~~~
 `card_value` is used to lookup cards in the strategy tables described below. All cards worth 10 points have a card_value of "10". Aces have a`card_value` of "A".
 
