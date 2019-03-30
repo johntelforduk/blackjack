@@ -7,7 +7,7 @@ Basic Strategy For Blackjack https://www.ebay.co.uk/itm/303101632202
 
 #### Cards
 
-Cards are represented as tuples, `(name, value_list)`
+Cards are represented as tuples, `(name, value_list), card_value)`.
 
 For example,
 
@@ -17,6 +17,8 @@ For example,
 ("Q♦", [10])
 ("A♠", [1, 11])
 ~~~
+`card_value` is used to lookup cards in the strategy tables described below. All cards worth 10 points have a card_value of "10". Aces have a`card_value` of "A".
+
 #### Shoe
 
 The [Shoe](https://en.wikipedia.org/wiki/Shoe_(cards) is configured to contain 4 packs of cards. It is configured to have remaining cards discarded, and the shoe re-filled with a fresh set of 4 packs of cards when the penetration level of 75% is reached. Both of these settings can be altered by changing these attributes of the `Shoe` class,
