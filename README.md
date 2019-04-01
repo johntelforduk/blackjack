@@ -1,9 +1,31 @@
 # Blackjack
-Simulation of Blackjack. Able to run experiments that play a large number of hands. Does calculation of house edge for a variety of strategies.
+Simulation of Blackjack. Able to run experiments that play a large number of rounds. Does calculation of player edge for a variety of strategies.
 
-Rules of Blackjack based on https://youtu.be/XYgdLMcPspo
+#### Results
 
-Basic Strategy For Blackjack https://www.ebay.co.uk/itm/303101632202
+![results table](results_table.png)
+
+![results graph](results_graph.png)
+
+#### Player Edge
+
+Player edge means the percentage advantage that the player can expect in the long-run when playing a particular strategy for many rounds in a long session. For most strategies, the Player Edge is negative, meaning that - in fact - the House has the edge.
+
+For example a Player Edge of -1% means that. on average, the player will be down by 1% of their staked money by the end the session. In this case, if the player stakes a total of £100, they can expect to be left with just £99 at the end of the session.
+
+A positive Player Edge means that the player is likely to be ahead at the end of the session :)
+
+#### Studies
+
+The program can be used to automatically do a Study, which consists of many sessions of Blackjack. Each session is like sitting down at a table and playing many rounds. Statistics about the sessions are stored, and then analysed.
+
+In the program, during each session, the `amount_won_or_loss` is subtracted to or added to each time their is money staked or won. `total_staked` is added to each time money is staked.
+
+When a study of many sessions is done, the `win_loss` list is appended to at then of each session.
+~~~
+# Multiply by 100 to make it a percentage.
+self.win_loss.append(100 * this_table.amount_won_or_lost / this_table.total_staked)
+~~~
 
 #### Cards
 
@@ -28,7 +50,7 @@ self.decks = 4                 # Number of decks in the shoe when full.
 self.penetration = 75 / 100    # Percentage of cards to be dealt before refilling shoe.
 ~~~
 
-At the end of each game, the `replnesh` method should be called, to check whether the shoe has been depleted below the penetration level. If it has, then the shoe will be re-filled and all cards in the shoe shuffled.
+At the end of each game, the `replenish` method should be called, to check whether the shoe has been depleted below the penetration level. If it has, then the shoe will be re-filled and all cards in the shoe shuffled.
 
 #### Blackjack Value
 
@@ -38,88 +60,44 @@ self.blackjack_value = 3 / 2        # Eg. £10 bet wins £15.
 ~~~
 
 ## Strategies
+
+The following strategies are implemented in the program.
+
 #### Dealer Strategy
-The most basic strategy. This is the strategy that dealers must follow in Vegas casinos. It is also possible to run experiments where the player uses this strategy too.
+
+Implemented in the `dealer_stategy` method. The most basic strategy; it is the strategy that dealers must follow when playing the House's hands in Vegas casinos. It is also possible to run experiments where the player uses this strategy too.
 
 _If current value of hand is 16 or less, then Hit, otherwise Stand._
 
-#### Basic Strategy Section 1
+#### Basic Strategy
 
-This strategy is based on the first section of the Basic Strategy For Blackjack described here,
-
+As illustrated on this card,
 https://www.ebay.co.uk/itm/303101632202
 
-This strategy builds on the Dealer Strategy, by taking into account the Dealer's up card as follows,
+More details here,
+https://github.com/johntelforduk/blackjack/blob/master/basic_strategy.md
 
-|     | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | A |
-|-----|---|---|---|---|---|---|---|---|----|---|
-| **17+** | S | S | S | S | S | S | S | S | S | S |
-| **16**  | S | S | S | S | S | H | H | H | H | H |
-| **15**  | S | S | S | S | S | H | H | H | H | H |
-| **14**  | S | S | S | S | S | H | H | H | H | H |
-| **13**  | S | S | S | S | S | H | H | H | H | H |
-| **12**  | H | H | S | S | S | H | H | H | H | H |
+Basic strategy has 4 sections, implemented in 4 methods as follows,
 
-H = "Hit", S = "Stand".
+`basic_strategy_section_1` : Basic rules about when to Hit or Stand.
 
-Each row is a different value of the Player's hand. Each column is a different value of the Dealer's up card.
+`basic_strategy_section_2` : Double Down rules.
 
+`basic_strategy_section_3` : Special rules when the player has an Ace in his first 2 cards of the hand.
 
-#### Basic Strategy Section 2
+`basic_strategy_section_4` : Rules for player hands with matching card values, which may be Split.
 
-This strategy is based on the second section of the Basic Strategy For Blackjack.
+These rules form a hierachy. For example, if the conditions for Section 4's rules are not met, then Section 3 is tested, and so on.
 
-This strategy builds on the Section 1 Strategy and the Dealer Strategy, by taking into account the Dealer's up card to make a decision about whether to Double Up the stake after seeing the first 2 cards of the hand. Note, that Blackjack rules says that after Doubing Up, the player receives just 1 more card; further Hitting is not permitted. Whenever this strategy decides not to Double Up, it reverts to Section 1 Strategy for playing the rest of the hand.
+#### Card Counting
 
-|     | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | A |
-|-----|---|---|---|---|---|---|---|---|----|---|
-| **11** | D | D | D | D | D | D | D | D | D | H |
-| **10**  | D | D | D | D | D | D | D | D | H | H |
-| **9**  | H | D | D | D | D | H | H | H | H | H |
-| **5-8**  | H | H | H | H | H | H | H | H | H | H |
+Hi-Lo card counting is described here, https://youtu.be/G_So72lFNIU
 
-H = "Hit", D = "Double Down".
+The effectiveness of Hi-Lo card counting strategy can be tested by the program. A running count of cards dealt from the shoe (face up cards only) is kept. The true count and recommended bet size is also calculated.
 
-Each row is a different value of the Player's hand. Each column is a different value of the Dealer's up card.
+Card counting varies the size of the initial bet in each round. But after the bet is made, Basic Strategy Section 4 is used to play the hand(s).
 
-#### Basic Strategy Section 3
+## Useful Resources
+Rules of Blackjack https://youtu.be/XYgdLMcPspo
 
-This strategy is based on the third section of the Basic Strategy For Blackjack.
-
-This strategy builds on the Section 1 & 2 Strategies and the Dealer Strategy, by adding special rules when one of the player's cards is an ace. 
-
-|     | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | A |
-|-----|---|---|---|---|---|---|---|---|----|---|
-| **A, 8-10** | S | S | S | S | S | S | S | S | S | S |
-| **A, 7**  | S | D | D | D | D | S | S | H | H | H |
-| **A, 6**  | H | D | D | D | D | H | H | H | H | H |
-| **A, 5**  | H | H | D | D | D | H | H | H | H | H |
-| **A, 4**  | H | H | D | D | D | H | H | H | H | H |
-| **A, 3**  | H | H | H | D | D | H | H | H | H | H |
-| **A, 2**  | H | H | H | D | D | H | H | H | H | H |
-
-H = "Hit", D = "Double Down", S = "Stand".
-
-Each row is a different value of the Player's hand. Each column is a different value of the Dealer's up card.
-
-#### Basic Strategy Section 4
-
-This strategy is based on the fourth section of the Basic Strategy For Blackjack.
-
-This strategy builds on Sections 1, 2 & 3 Strategies and the Dealer Strategy, by adding special rules when both of the player's first 2 cards in a hand are of equal value. Amongst other things, the player has the option to Split their hand if their first two cards are of equal value.
-
-|     | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | A |
-|-----|---|---|---|---|---|---|---|---|----|---|
-| **A, A or 8, 8** | SP | SP | SP | SP | SP | SP | SP | SP | SP  | SP |
-| **10, 10**  | S | S | S | S | S | S | S | S | S  | S |
-| **9, 9**  | SP | SP | SP | SP | SP | S | SP | SP | S | S |
-| **7, 7**  | SP | SP | SP | SP | SP | SP | H | H | H | H |
-| **6, 6**  | SP | SP | SP | SP | SP | H | H | H | H  | H |
-| **5, 5**  | D | D | D | D | D | D | D | D | H | H |
-| **4, 4**  | H | H | H | SP | SP | H | H | H | H | H |
-| **3, 3**  | SP | SP | SP | SP | SP | SP | H | H | H | H |
-| **2, 2**  | SP | SP | SP | SP | SP | SP | H | H | H | H |
-
-SP = "Split, H = "Hit", D = "Double Down", S = "Stand".
-
-Each row is a different value of the Player's hand. Each column is a different value of the Dealer's up card.
+Blackjack terminology, https://en.wikipedia.org/wiki/Blackjack and https://www.blackjackapprenticeship.com/glossary-of-blackjack-terms/

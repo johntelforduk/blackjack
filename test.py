@@ -1,3 +1,5 @@
+# Do some tests.
+
 import blackjack
 
 class Test:
@@ -22,7 +24,7 @@ class Test:
         if blackjack.verbose:
             this_table.shoe.print()
 
-        this_table.play_one_game(self.strategy_name)    # Play a game.
+        this_table.play_one_round(self.strategy_name)    # Play a game.
 
 
 blackjack.verbose = True

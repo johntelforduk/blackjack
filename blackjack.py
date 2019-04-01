@@ -1,8 +1,4 @@
 # Blackjack simulator.
-#
-# Game terminology based upon intro section of,
-# https://en.wikipedia.org/wiki/Blackjack
-#
 
 import random
 
@@ -43,6 +39,35 @@ class Deck:
     def shuffle(self):
         random.shuffle(self.cards)
 
+class Card_Counting:
+
+    def __init__(self):
+        self.running_count = 0
+        self.true_count = 0
+
+    def reset(self):
+        self.running_count = 0
+        self.true_count = 0
+        self.bet_size = 0
+
+    def print(self):
+        print("Running count=%d, True count=%d, Bet size=%d" % (self.running_count, self.true_count, self.bet_size))
+
+    def adjust_count(self, card, shoe_size, betting_unit):
+        (_, _, card_value) = card
+
+        count_map = {"2": 1, "3": 1, "4": 1, "5": 1, "6": 1, "7": 0, "8": 0, "9": 0, "10": -1, "A": -1}
+
+        self.running_count += count_map.get(card_value)     # Adjust the running count based on value of this card.
+
+        decks_in_shoe = shoe_size / 52
+
+        self.true_count = int(self.running_count / decks_in_shoe)
+
+        self.bet_size = (self.true_count - 1) * betting_unit
+        if self.bet_size < 0:                               # Can't bet a -ve stake :)
+            self.bet_size = 0
+
 
 # See - https://en.wikipedia.org/wiki/Shoe_(cards)
 class Shoe:
@@ -51,6 +76,7 @@ class Shoe:
         self.cards = []                                     # Cards currently in the shoe.
         self.decks = 4                                      # Number of decks in the shoe when full.
         self.penetration = 75 / 100                         # Percentage of cards to be dealt before refilling shoe.
+        self.card_count = Card_Counting()
 
     # Print the first 10 cards in shoe, plus number of cards in shoe.
     def print(self):
@@ -73,12 +99,16 @@ class Shoe:
                 self.cards = self.cards + new_deck.cards
 
             self.shuffle()                                  # If cards were added, then shuffle the cards in the shoe.
+            self.card_count.reset()                         # Reset the card count to zero.
 
     # Remove the card from the front of the shoe. Return it as value.
     def draw_one_card(self):
         choice = self.cards.pop(0)                          # Take the first card off the front of the shoe.
         return choice                                       # Return the chosen card.
 
+    # Return the number of cards left in the shoe.
+    def shoe_size(self):
+        return len(self.cards)
 
 class Hand:
     def __init__(self, name, stake, ancestors):
@@ -86,7 +116,7 @@ class Hand:
         self.stake = stake
         self.ancestors = ancestors              # How many ancestors does this hand have?
         self.cards = []                         # The hand starts with an empty list of cards.
-        self.value = 0                     # Current value of the hand.
+        self.value = 0                          # Current value of the hand.
         self.busted = False                     # Is the hand busted?
         self.blackjack = False
 
@@ -108,7 +138,9 @@ class Hand:
         print(", Stake=£%d" % self.stake, end="")
         print()
 
-
+    # Calculate the points value of a hand. If the hand is busted, it sets the busted attribute to True.
+    # For hands containing 1 or more aces, there are multiple possible value. This method returns the highest
+    # non-busted value possible. If the hand is busted, it returns the lowest points value possible.
     def calculate_value(self):
         possible_values = [0]             # List of all possible values of this hand.
 
@@ -132,9 +164,10 @@ class Hand:
         if self.busted:
             self.value = min(possible_values)
 
-
+    # This method should only be called for the 1st hands (player or dealer) of each round. Hands created from
+    # splits cannot be blackjacks.
     def check_blackjack(self):
-        if self.value == 21:
+        if self.value == 21 and self.ancestors == 0:    # Check no ancestors. Hands with ancestors are not 1st hands.
             self.blackjack = True
 
     # Add the parm card to this hand.
@@ -143,32 +176,17 @@ class Hand:
         self.calculate_value()          # Recalculate the value of this hand.
 
 
-# Parm is a card. Function returns a string which is the value of the card for purpose of looking
-# it up on the "Basic Strategy For Blackjack" strategy card.
-# def card_value(card):
-#     (card, value_list) = card
-#     if value_list in [[2], [3], [4], [5], [6], [7], [8], [9]]:
-#         return card[0]                     # First char of card string, eg "3♥" returns "3"
-#     elif value_list == [10]:
-#         return "10"
-#     else:
-#         return "A"
-
 class Table:
-
-    # Deal one card from the front of the shoe to one of the hands.
-    def deal_one_card(self, hand):
-        card = self.shoe.draw_one_card()                # Draw a card from the shoe,
-        hand.receive_card(card)                         # ... and add it to the parm hand.
 
     def __init__(self):
         self.shoe = Shoe()                              # Create an empty card shoe.
         self.shoe.replenish()                           # ... fill the shoe with normal, randomised cards.
 
-        self.table_stake = 4 * 3 * 2                           # Normal stake is £24.
-        self.blackjack_value = 3 / 2                    # Eg. £8 bet wins £12.
+        # Normal stake is £4. Chosen as it can be split into 4 hands while remaining an integer.
+        self.betting_unit = 4
+        self.blackjack_value = 3 / 2                    # Eg. £4 bet wins £6 for a blackjack (and stake returned too).
 
-        self.games_played = 0
+        self.rounds_played = 0
         self.hands_played_by_player = 0
         self.total_staked = 0
         self.amount_won_or_lost = 0                     # +ve number means the player is in profit, -ve means loss.
@@ -190,17 +208,32 @@ class Table:
     def win(self, winnings):
         self.amount_won_or_lost += winnings
 
+    # Deal one card from the front of the shoe to one of the hands.
+    def deal_one_card(self, hand):
+        card = self.shoe.draw_one_card()                # Draw a card from the shoe,
+        hand.receive_card(card)                         # ... and add it to the parm hand.
+        return card                                     # Return the card to caller.
+
+    # When a card is dealt face up, it's value is visible, so the card count can be adjusted.
+    def deal_one_card_face_up(self, hand):
+        card = self.deal_one_card(hand)
+        current_shoe_size = self.shoe.shoe_size()
+
+        # This card has been dealt face up, so adjust the card count.
+        self.shoe.card_count.adjust_count(card, current_shoe_size, self.betting_unit)
+
     def print_table_status(self):
-        print("Games played=%d, Total staked=£%d, Amount won or lost=£%d"
-              % (self.games_played, self.total_staked, self.amount_won_or_lost))
+        print("Rounds played=%d, Total staked=£%d, Amount won or lost=£%d"
+              % (self.rounds_played, self.total_staked, self.amount_won_or_lost))
 
     # This strategy is to Stand on 17 to 21, and to Hit on anything less than 17. In most casinos, this is also the
     # strategy that the Dealer is required to follow.
     def dealer_stategy(self, hand, dealer_up_card):
         while hand.value < 17 and not hand.busted:
-            self.deal_one_card(hand)
+            self.deal_one_card_face_up(hand)
 
-    # This strategy looks at the dealer's up card to make a more nuanced decision about whether to Hit or Stand.
+    # This section of Basic Strategy looks at the dealer's up card to make a more nuanced decision about whether
+    # to Hit or Stand.
     def basic_strategy_section_1(self, hand, dealer_up_card):
 
         (_, _, dealer_card_value) = dealer_up_card
@@ -210,11 +243,12 @@ class Table:
             if hand.value == 12 and dealer_card_value in ["2", "3"] \
                or (hand.value in [12, 13, 14, 15, 16] and dealer_card_value in ["7", "8", "9", "10", "A"]) \
                or hand.value <= 11:
-                self.deal_one_card(hand)                # "Hit"
+                self.deal_one_card_face_up(hand)            # "Hit"
+
             else:
-                finished = True                         # "Stand"
+                finished = True                             # "Stand"
 
-
+    # The section of Basic Strategy introduces rules for when to Double Down.
     def basic_strategy_section_2(self, hand, dealer_up_card):
         (_, _, dealer_card_value) = dealer_up_card
 
@@ -229,14 +263,15 @@ class Table:
         elif hand.value == 9 and dealer_card_value in ["3", "4", "5", "6"]:
             double_down = True
 
-        if double_down:
+        if double_down:                                         # "Double Down"
             self.double_down(hand)
-            self.deal_one_card(hand)  # One more card only, after Double Down.
+            self.deal_one_card_face_up(hand)                    # One more card only, after Double Down.
 
         # If we are not doubling down, then play Basic Strategy Section 1.
         else:
             self.basic_strategy_section_1(hand, dealer_up_card)
 
+    # This section of Basic Strategy introduces rules for player hands that include an ace.
     def basic_strategy_section_3(self, hand, dealer_up_card):
 
         other_card = ""
@@ -285,16 +320,17 @@ class Table:
 
         elif decision == "Double Down":
             self.double_down(hand)                                  # Double stake.
-            self.deal_one_card(hand)                                # One more card only, after Double Down.
+            self.deal_one_card_face_up(hand)                                # One more card only, after Double Down.
 
         elif decision == "Hit":
-            self.deal_one_card(hand)                                # "Hit",
+            self.deal_one_card_face_up(hand)                        # "Hit",
             self.basic_strategy_section_2(hand, dealer_up_card)     # ... and then continue with Section 2 strategy.
 
         elif decision != "Stand":                                   # "Stand" means do nothing, but otherwise,
             self.basic_strategy_section_2(hand, dealer_up_card)     # ... continue with Section 2 strategy.
 
-
+    # This section of Basic Strategy introduces rules for player hands which with matching card values, which may
+    # be Split.
     def basic_strategy_section_4(self, hand, dealer_up_card):
 
         # Work out the values of both of the player's cards.
@@ -302,7 +338,7 @@ class Table:
         (_, _, player_card_2_value) = hand.cards[1]
 
         # Rule is that 1st hand can only be split twice. Ie. no more than 4 hands for 1 player in a single game.
-        # And 1st hand can only be split if both cards are equal value.
+        # And a hand can only be split if both cards are equal value.
         if hand.ancestors <= 1 and player_card_1_value == player_card_2_value:
 
             (_, _, dealer_card_value) = dealer_up_card
@@ -337,7 +373,7 @@ class Table:
                 self.player_hands[new_hand_index].receive_card(second_card)
 
                 # Deal a card to parent, so that it has 2 cards again.
-                self.deal_one_card(hand)
+                self.deal_one_card_face_up(hand)
 
                 # The parent hand is now a child too.
                 hand.ancestors += 1
@@ -346,17 +382,18 @@ class Table:
                 self.basic_strategy_section_4(hand, dealer_up_card)
 
                 # Now work on the child hand.
-                self.deal_one_card(self.player_hands[new_hand_index])
+                self.deal_one_card_face_up(self.player_hands[new_hand_index])
 
                 # Now apply this strategy to the child hand.
                 self.basic_strategy_section_4(self.player_hands[new_hand_index], dealer_up_card)
 
             elif decision == "D":                                       # "Double Down"
                 self.double_down(hand)                                  # Double stake.
-                self.deal_one_card(hand)                                # One more card only, after Double Down.
+                self.deal_one_card_face_up(hand)                                # One more card only, after Double Down.
 
             elif decision == "H":                                       # "Hit"
-                self.deal_one_card(hand)                                #
+                self.deal_one_card_face_up(hand)                                # Deal one card to the hand.
+
                 self.basic_strategy_section_3(hand, dealer_up_card)     # ... and then continue with Section 3 strategy.
 
             elif decision != "S":                                       # "Stand" means do nothing, but otherwise,
@@ -365,37 +402,45 @@ class Table:
         else:
             self.basic_strategy_section_3(hand, dealer_up_card)
 
-    def play_one_game(self, strategy_name):
+    def play_one_round(self, strategy_name):
 
-        self.games_played += 1                              # Increment number of games played on this table.
+        self.rounds_played += 1                             # Increment number of rounds played on this table.
 
         # Create a hand of cards for the dealer. Dealer has no money staked.
         self.dealer = Hand("Dealer Hand",
-                            0,                              # Dealer has now money staked.
+                            0,                              # Dealer has no money staked.
                             0)                              # This hand has no ancestors.
 
-        self.invest(self.table_stake)
+        if verbose:
+            self.shoe.card_count.print()  # Print the status of the card counting.
+
+        # If we're doing card counting, then bet according to the calculation of the card counting strategy.
+        if strategy_name == "Hi-Lo Card Count":
+            this_stake = self.shoe.card_count.bet_size
+        else:
+            this_stake = self.betting_unit
+        self.invest(this_stake)
 
         # Create a first hand of cards for the player.
         self.player_hands.append(Hand("Player Hand",
-                                      self.table_stake,     # Player starts by staking the table stake.
+                                      this_stake,
                                       0))                   # The player's first hand has no ancestors.
         self.hands_played_by_player += 1
 
         # Deal first 4 cards in classic order (Player, Dealer, Player, Dealer).
-        self.deal_one_card(self.player_hands[0])
-        self.deal_one_card(self.dealer)
-        self.deal_one_card(self.player_hands[0])
-        self.deal_one_card(self.dealer)
+        self.deal_one_card_face_up(self.player_hands[0])    # Face up.
+        self.deal_one_card_face_up(self.dealer)             # Face up.
+        self.deal_one_card_face_up(self.player_hands[0])    # Face up.
+        self.deal_one_card(self.dealer)                     # Not face up.
 
         # Check both Player and Dealer's hands for Blackjack on original 2 cards only.
         self.dealer.check_blackjack()
         self.player_hands[0].check_blackjack()
 
-        if self.player_hands[0].blackjack:                                   # Player has a Blackjack.
-            if self.dealer.blackjack:                           # Dealer also has a Blackjack,
-                self.win(self.player_hands[0].stake)                         # ... so player wins his stake back.
-            else:                                               # Player has Blackjack, and dealer doesn't have one,
+        if self.player_hands[0].blackjack:                  # Player has a Blackjack.
+            if self.dealer.blackjack:                       # Dealer also has a Blackjack,
+                self.win(self.player_hands[0].stake)        # ... so player wins his stake back.
+            else:                                           # Player has Blackjack, and dealer doesn't have one,
                 # ... so he wins his stake back, plus his stake multiplied by Blackjack odds.
                 self.win(self.player_hands[0].stake + self.blackjack_value * self.player_hands[0].stake)
 
@@ -405,11 +450,13 @@ class Table:
             dealer_up_card = self.dealer.cards[0]
 
             # Convert the parm strategy string into a strategy function.
+            # Note that card counting is based on Basic Strategy.
             strategy_map = {"Dealer": self.dealer_stategy,
                             "Basic Strategy Section 1": self.basic_strategy_section_1,
                             "Basic Strategy Section 2": self.basic_strategy_section_2,
                             "Basic Strategy Section 3": self.basic_strategy_section_3,
-                            "Basic Strategy Section 4": self.basic_strategy_section_4}
+                            "Basic Strategy Section 4": self.basic_strategy_section_4,
+                            "Hi-Lo Card Count": self.basic_strategy_section_4}
             strategy = strategy_map.get(strategy_name)
 
             strategy(self.player_hands[0], dealer_up_card)
@@ -424,15 +471,19 @@ class Table:
             # and the dealer doesn't have a Blackjack...
             # ... then it is the dealer's turn to play.
             if not all_player_hands_busted and not self.dealer.blackjack:
+
+                # First turn over the dealer's second card (index=1), and adjust the card count.
+                self.shoe.card_count.adjust_count(self.dealer.cards[1], self.shoe.shoe_size(), self.betting_unit)
+
                 self.dealer_stategy(self.dealer, dealer_up_card)
 
                 # Compare each of the player's hands with the dealer's hand.
                 for ph in self.player_hands:
-                    if not ph.busted:           # Only interested in non-busted player hands.
+                    if not ph.busted:                       # Only interested in non-busted player hands.
 
                         # If Dealer has busted, or Player has higher score than Dealer, then pleyer wins.
                         if self.dealer.busted or ph.value > self.dealer.value:
-                            self.win(2 * ph.stake)                 # Win 1*stake as winnings, plus get stake back.
+                            self.win(2 * ph.stake)          # Win 1*stake as winnings, plus get stake back.
 
                         # Dealer and Player have matching scores, so no winner... but Player does get his stake back.
                         elif ph.value == self.dealer.value:
@@ -440,9 +491,10 @@ class Table:
 
         if verbose:
             for ph in self.player_hands:
-                ph.print()
-            self.dealer.print()
-            self.print_table_status()
+                ph.print()                                  # Print all of the dealer's hands.
+            self.dealer.print()                             # Print the dealer's hand.
+            self.shoe.print()                               # Print status of the shoe.
+            self.print_table_status()                       # Print the status of the table.
             print()
 
         # Game is over, so Player & Dealer dispose of their hands of cards.
