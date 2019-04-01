@@ -1,12 +1,6 @@
 # Blackjack
 Simulation of Blackjack. Able to run experiments that play a large number of rounds. Does calculation of player edge for a variety of strategies.
 
-#### Results
-
-![results table](results_table.png)
-
-![results graph](results_graph.png)
-
 #### Player Edge
 
 Player edge means the percentage advantage that the player can expect in the long-run when playing a particular strategy for many rounds in a long session. For most strategies, the Player Edge is negative, meaning that - in fact - the House has the edge.
