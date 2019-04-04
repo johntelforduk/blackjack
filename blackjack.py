@@ -74,9 +74,12 @@ class Shoe:
 
     def __init__(self):
         self.cards = []                                     # Cards currently in the shoe.
+
+        # Default values for these two attributes.
         self.decks = 4                                      # Number of decks in the shoe when full.
         self.penetration = 75 / 100                         # Percentage of cards to be dealt before refilling shoe.
-        self.card_count = Card_Counting()
+
+        self.card_count = Card_Counting()                   # Create an object to do card counting.
 
     # Print the first 10 cards in shoe, plus number of cards in shoe.
     def print(self):
@@ -101,14 +104,20 @@ class Shoe:
             self.shuffle()                                  # If cards were added, then shuffle the cards in the shoe.
             self.card_count.reset()                         # Reset the card count to zero.
 
-    # Remove the card from the front of the shoe. Return it as value.
-    def draw_one_card(self):
-        choice = self.cards.pop(0)                          # Take the first card off the front of the shoe.
-        return choice                                       # Return the chosen card.
-
     # Return the number of cards left in the shoe.
     def shoe_size(self):
         return len(self.cards)
+
+    # Remove the card from the front of the shoe. Return it as value.
+    def draw_one_card(self):
+
+        # For safety, ensure that there is at least 1 card in the shoe at all times.
+        if self.shoe_size() <= 1:
+            self.replenish()
+
+        choice = self.cards.pop(0)                          # Take the first card off the front of the shoe.
+        return choice                                       # Return the chosen card.
+
 
 class Hand:
     def __init__(self, name, stake, ancestors):
@@ -178,8 +187,13 @@ class Hand:
 
 class Table:
 
-    def __init__(self):
+    def __init__(self, decks, penetration):
         self.shoe = Shoe()                              # Create an empty card shoe.
+
+        # Overwrite the shoe's defaults for decks and penetration with the table's parms.
+        self.shoe.decks = decks
+        self.shoe.penetration = penetration
+
         self.shoe.replenish()                           # ... fill the shoe with normal, randomised cards.
 
         # Normal stake is £4. Chosen as it can be split into 4 hands while remaining an integer.
