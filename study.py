@@ -24,7 +24,8 @@ class Experiment:
     # Run the study.
     def run(self):
         for experiments in range(self.sessions):
-            this_table = blackjack.Table()
+            this_table = blackjack.Table(4,             # 4 Decks in the shoe.
+                                         0.75)          # Shoe replenished when 75% penetration reached.
 
             for games in range(self.rounds_per_session):
                 this_table.play_one_round(self.strategy_name)
@@ -67,6 +68,7 @@ class Study:
         # (Strategy Name, Number of Sessions, Rounds per Session)
         for ex in ["Dealer", "Basic Strategy Section 1", "Basic Strategy Section 2", "Basic Strategy Section 3",
                    "Basic Strategy Section 4", "Hi-Lo Card Count"]:
+
             self.experiments.append(Experiment(ex, sessions, rounds_per_session))
 
     def write_to_file(self):

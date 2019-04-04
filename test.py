@@ -8,7 +8,8 @@ class Test:
 
         print("Player strategy:", self.strategy_name)
 
-        this_table = blackjack.Table()
+        this_table = blackjack.Table(4,  # 4 Decks in the shoe.
+                                     0.75)  # Shoe replenished when 75% penetration reached.
 
         # Force some test cards on to the front of the shoe.
         this_table.shoe.cards =     [("6♥", [6], "6")]
@@ -33,3 +34,4 @@ t2 = Test("Basic Strategy Section 1")
 t3 = Test("Basic Strategy Section 2")
 t4 = Test("Basic Strategy Section 3")
 t5 = Test("Basic Strategy Section 4")
+t6 = Test("Hi-Lo Card Count")
