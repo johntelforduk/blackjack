@@ -1,13 +1,6 @@
 # Blackjack
 Simulation of Blackjack. Able to run experiments that play a large number of rounds. Does calculation of player edge for a variety of strategies.
 
-#### Results
-
-![results table](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/results_table.PNG
-)
-
-![results graph](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/results_graph.PNG)
-
 #### Player Edge
 
 Player Edge means the percentage advantage that the player can expect in the long-run when playing a particular strategy for many rounds in a long session. For most strategies, the Player Edge is negative, meaning that - in fact - the House has the edge.
@@ -97,6 +90,21 @@ When a study of many sessions is completed, the `win_loss` list is appended to.
 # Multiply by 100 to make it a percentage.
 self.win_loss.append(100 * this_table.amount_won_or_lost / this_table.total_staked)
 ~~~
+
+#### Study Results
+
+More sophisticated strategies return (on average) a better edge for the player.
+
+![results table](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/results_table.PNG
+)
+
+![results graph](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/results_graph.PNG)
+
+Shoes that are replenished at higher penetration levels, and which are replenished with fewer decks of cards, return (on average) a better edge for the player.
+
+![results table](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/shoe_results_table.PNG)
+
+![results graph](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/shoe_results_graph.PNG)
 
 ## Useful Resources
 Rules of Blackjack https://youtu.be/XYgdLMcPspo
