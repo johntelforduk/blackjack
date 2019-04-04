@@ -1,29 +1,24 @@
 # Blackjack
 Simulation of Blackjack. Able to run experiments that play a large number of rounds. Does calculation of player edge for a variety of strategies.
 
+#### Results
+
+![results table](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/results_table.PNG
+)
+
+![results graph](https://s3-eu-west-1.amazonaws.com/chaotichaystack.com/results_graph.PNG)
+
 #### Player Edge
 
-Player edge means the percentage advantage that the player can expect in the long-run when playing a particular strategy for many rounds in a long session. For most strategies, the Player Edge is negative, meaning that - in fact - the House has the edge.
+Player Edge means the percentage advantage that the player can expect in the long-run when playing a particular strategy for many rounds in a long session. For most strategies, the Player Edge is negative, meaning that - in fact - the House has the edge.
 
 For example a Player Edge of -1% means that. on average, the player will be down by 1% of their staked money by the end the session. In this case, if the player stakes a total of £100, they can expect to be left with just £99 at the end of the session.
 
 A positive Player Edge means that the player is likely to be ahead at the end of the session :)
 
-#### Studies
-
-The program can be used to automatically do a Study, which consists of many sessions of Blackjack. Each session is like sitting down at a table and playing many rounds. Statistics about the sessions are stored, and then analysed.
-
-In the program, during each session, the `amount_won_or_loss` is subtracted to or added to each time their is money staked or won. `total_staked` is added to each time money is staked.
-
-When a study of many sessions is done, the `win_loss` list is appended to at then of each session.
-~~~
-# Multiply by 100 to make it a percentage.
-self.win_loss.append(100 * this_table.amount_won_or_lost / this_table.total_staked)
-~~~
-
 #### Cards
 
-Cards are represented as tuples, `(name, value_list), card_value)`.
+Cards are represented as tuples, `(name, value_list, card_value)`.
 
 For example,
 
@@ -37,18 +32,18 @@ For example,
 
 #### Shoe
 
-The [Shoe](https://en.wikipedia.org/wiki/Shoe_(cards) is configured to contain 4 packs of cards. It is configured to have remaining cards discarded, and the shoe re-filled with a fresh set of 4 packs of cards when the penetration level of 75% is reached. Both of these settings can be altered by changing these attributes of the `Shoe` class,
+The [Shoe](https://en.wikipedia.org/w/index.php?title=Shoe_(cards)&oldid=873102981) is configured to contain 4 packs of cards. It is configured to have remaining cards discarded, and the shoe re-filled with a fresh set of 4 packs of cards when the penetration level of 75% is reached. Both of these settings can be altered by changing these attributes of the `Shoe` class,
 
 ~~~
 self.decks = 4                 # Number of decks in the shoe when full.
 self.penetration = 75 / 100    # Percentage of cards to be dealt before refilling shoe.
 ~~~
 
-At the end of each game, the `replenish` method should be called, to check whether the shoe has been depleted below the penetration level. If it has, then the shoe will be re-filled and all cards in the shoe shuffled.
+At the end of each game, the `replenish` method is called, to check whether the shoe has been depleted below the penetration level. If it has, then the shoe will be re-filled and all cards in the shoe shuffled.
 
 #### Blackjack Value
 
-A Blackjack can only be won with first two cards of first hand of a game. The attribute `blackjack_value` of the `Table` class is set to "3 for 2", which is standard the standard value of a Blackjack value in Vegas casinos (stake also returned). 
+A Blackjack can only be won with the first two cards of the first hand of a game. The attribute `blackjack_value` of the `Table` class is set to "3 for 2", which is the standard Blackjack value in Vegas casinos (stake also returned). 
 ~~~
 self.blackjack_value = 3 / 2        # Eg. £10 bet wins £15.
 ~~~
@@ -90,6 +85,18 @@ Hi-Lo card counting is described here, https://youtu.be/G_So72lFNIU
 The effectiveness of Hi-Lo card counting strategy can be tested by the program. A running count of cards dealt from the shoe (face up cards only) is kept. The true count and recommended bet size is also calculated.
 
 Card counting varies the size of the initial bet in each round. But after the bet is made, Basic Strategy Section 4 is used to play the hand(s).
+
+#### Studies
+
+The program can be used to automatically do a Study, which consists of many sessions of Blackjack. Each session is like sitting down at a table and playing many rounds. Statistics about the sessions are stored, and then analysed.
+
+`amount_won_or_loss` is subtracted from each time money is staked, and added to each time money is won. `total_staked` is added to each time money is staked.
+
+When a study of many sessions is completed, the `win_loss` list is appended to.
+~~~
+# Multiply by 100 to make it a percentage.
+self.win_loss.append(100 * this_table.amount_won_or_lost / this_table.total_staked)
+~~~
 
 ## Useful Resources
 Rules of Blackjack https://youtu.be/XYgdLMcPspo
