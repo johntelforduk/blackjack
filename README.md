@@ -104,16 +104,16 @@ self.win_loss.append(100 * this_table.amount_won_or_lost / this_table.total_stak
 
 More sophisticated strategies return (on average) a better edge for the player.
 
-![results table](https://github.com/johntelforduk/blackjack/blob/master/results_table.PNG
+![results table](https://github.com/johntelforduk/blackjack/blob/master/assets/results_table.PNG
 )
 
-![results graph](https://github.com/johntelforduk/blackjack/blob/master/results_graph.PNG)
+![results graph](https://github.com/johntelforduk/blackjack/blob/master/assets/results_graph.PNG)
 
 Shoes that are replenished at higher penetration levels, and which are replenished with fewer decks of cards, return (on average) a better edge for the player.
 
-![results table](https://github.com/johntelforduk/blackjack/blob/master/shoe_results_table.PNG)
+![results table](https://github.com/johntelforduk/blackjack/blob/master/assets/shoe_results_table.PNG)
 
-![results graph](https://github.com/johntelforduk/blackjack/blob/master/shoe_results_graph.PNG)
+![results graph](https://github.com/johntelforduk/blackjack/blob/master/assets/shoe_results_graph.PNG)
 
 ## Useful Resources
 Rules of Blackjack https://youtu.be/XYgdLMcPspo
